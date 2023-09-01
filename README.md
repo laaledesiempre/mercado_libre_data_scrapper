@@ -28,6 +28,12 @@ __ _ _
 
 > This app was created for educational purposes, don't use it with comercial purposes, also, be careful about the use of this app, can make a lot of requests, (one per scrapped item). we do not agree with this usage, this is for small amout of data for data analisis and similars.
 
+## Requires
+> - Requests (for http calls)
+> - BeautifulSoup (for scrapping tools)
+> - Pandas (for data frames)
+
+
 This program was created by laaledesiempre as a practical proyect for her own study group. if you use some code from here or fork this, you must use ir following GPL3 license. thank you for reading this
 
 have a nice day.
