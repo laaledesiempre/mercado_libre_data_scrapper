@@ -1,4 +1,3 @@
-
 import requests # https://docs.python-requests.org/en/v2.0.0/
 from bs4 import BeautifulSoup as bs # https://tedboy.github.io/bs4_doc/
 import re
@@ -9,6 +8,26 @@ import time
 # Functions
 ###########
 
+# Recibes URL on BS parsed html 
+def parse_url_to_bs_html(url):
+  """
+  Input -> string: url
+  Output -> Beutiful Soap HTML Parsed object
+  """
+  return bs(requests.get(url).text, "html.parser")
+
+# Recibes a Query and makes URL for it  
+def generate_link(query):
+  """
+  Input -> string: Query
+  Output -> string: mercado libre URL for that query
+  """ 
+  query_splited= query.split()
+  query_html="%19".join(query_splited)
+  query_line="-".join(query_splited)
+  url="https://listado.mercadolibre.com.ar/"+query_line+"#D[A:"+query_html+"]"
+  return url
+
 #######################
 # Printing each element of a query link
 #######################
@@ -16,14 +35,13 @@ import time
 def finder(url,number,query):
   # Gets starting time
   current_time = time.localtime()
-  date = str(current_time.tm_mday) + "/" + str(current_time.tm_mon) + "/" + str(current_time.tm_year)
-  hour = str(current_time.tm_hour) + ":" + str(current_time.tm_min)
+  date, hour = [str(current_time.tm_mday) + "/" + str(current_time.tm_mon) + "/" + str(current_time.tm_year), str(current_time.tm_hour) + ":" + str(current_time.tm_min)] 
 
   # Incrementator for page counter
   current_page_number = number+1
 
   # Parses the utl
-  html= bs(requests.get(url).text, "html.parser")
+  html = parse_url_to_bs_html(url)
 
   # List of items in the current page
   items_on_page = html.find_all("li", attrs = {"class":"ui-search-layout__item"})
@@ -33,7 +51,7 @@ def finder(url,number,query):
     product_url = x.find("a", attrs = {"class":"ui-search-link"})["href"]
 
     # Request to product page
-    product_page = bs(requests.get(product_url).text, "html.parser")
+    product_page = parse_url_to_bs_html(product_url)
 
     # Name
     title = product_page.find("h1",attrs = {"class":"ui-pdp-title"}).text
@@ -59,7 +77,7 @@ def finder(url,number,query):
       print("Vender Name: ", product_vendor_name)
     except:
       for _ in range(10):
-        product_page = bs(requests.get(product_url).text,"html.parser")
+        product_page = parse_url_to_bs_html(product_url)
         try:
           product_vendor_name = re.sub("\?brandId=\d*$","", product_page.find("a",attrs={"target":"_blank","class":"ui-pdp-media__action ui-box-component__action"})["href"][35:])
           print("Vender Name: ", product_vendor_name)
@@ -70,7 +88,7 @@ def finder(url,number,query):
 
     # After getting all the data, it appends it to the list of items for the dataframe
     list_of_items.append([title, price, product_url, product_id, product_vendor_name, date, hour])
-    
+
     # Just because it looks cool...
     print("-"*9)
 
@@ -106,25 +124,12 @@ def finder(url,number,query):
       else:
         print("Respuesta erronea, reintentar")
 
-    # Creation of the csv 
+    # Creation of the csv
     name = query.replace(" ","_")+"_"+str(current_time.tm_mday) +"-"+ str(current_time.tm_mon) +"-"+ str(current_time.tm_year)+"_"+str(current_time.tm_hour) +":"+ str(current_time.tm_min)
     data_frame.to_csv(name+".csv")
 
     # Closing message that apears when it succed
     print(f"\nDataframe guardado con exito con el nombre {name}")
-
-
-
-#######################
-# Query to link function
-#######################
-
-def generate_link(query):
-  query_splited= query.split()
-  query_html="%20".join(query_splited)
-  query_line="-".join(query_splited)
-  url="https://listado.mercadolibre.com.ar/"+query_line+"#D[A:"+query_html+"]"
-  return url
 
 #######################
 # Main loop
@@ -132,15 +137,15 @@ def generate_link(query):
 
 print("""
 
-                               _            
-  /\/\   ___ _ __ ___ __ _  __| | ___       
- /    \ / _ \ '__/ __/ _` |/ _` |/ _ \      
-/ /\/\ \  __/ | | (_| (_| | (_| | (_) |     
-\/    \/\___|_|  \___\__,_|\__,_|\___/      
-                                            
-   __ _ _                                   
-  / /(_) |__  _ __ ___   ___ ___  _ __ ___  
- / / | | '_ \| '__/ _ \ / __/ _ \| '_ ` _ \ 
+                               _
+  /\/\   ___ _ __ ___ __ _  __| | ___
+ /    \ / _ \ '__/ __/ _` |/ _` |/ _ \
+/ /\/\ \  __/ | | (_| (_| | (_| | (_) |
+\/    \/\___|_|  \___\__,_|\__,_|\___/
+
+   __ _ _
+  / /(_) |__  _ __ ___   ___ ___  _ __ ___
+ / / | | '_ \| '__/ _ \ / __/ _ \| '_ ` _ \
 / /__| | |_) | | |  __/| (_| (_) | | | | | |
 \____/_|_.__/|_|  \___(_)___\___/|_| |_| |_|
 
